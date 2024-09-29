@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Инициализация кнопок
         initButton(button_zero, R.id.button_zero);
         initButton(button_one, R.id.button_one);
-        initButton(button_two, R.id.button_two); // Исправлено с button_twoo на button_two
+        initButton(button_two, R.id.button_two);
         initButton(button_three, R.id.button_three);
         initButton(button_four, R.id.button_four);
         initButton(button_five, R.id.button_five);
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initButton(button_eight, R.id.button_eight);
         initButton(button_nine, R.id.button_nine);
         initButton(button_dot, R.id.button_dot);
-        initButton(button_ac, R.id.button_ac); // Исправлено с button_Ac на button_ac
+        initButton(button_ac, R.id.button_ac);
         initButton(button_c, R.id.button_c);
         initButton(button_equals, R.id.button_equals);
         initButton(button_div, R.id.button_div);
@@ -88,26 +88,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
+        // Предотвращение дублирования знаков
+        if (isOperator(btnText)) {
+            if (data.isEmpty() || isOperator(data.charAt(data.length() - 1) + "")) {
+                return;
+            }
+        }
+
+        // Удаление начального нуля, если вводится число
+        if (data.equals("0") && !isOperator(btnText)) {
+            data = "";
+        }
+
         // Обработка кнопки "="
         if (btnText.equals("=")) {
-            tvExpression.setText(tvResult.getText());
-            
-
+            if (!isValidExpression(data)) {
+                tvResult.setText("Error");
+                return;
+            }
 
             String finalResult = evaluateExpression(data);
-            tvResult.setText(finalResult);
+            if (!finalResult.equals("Error")) {
+                tvExpression.setText(tvResult.getText());
+                tvResult.setText(finalResult);
+            }
             return;
         }
 
-        // Добавление текста кнопки к выражению
+
         data += btnText;
         tvExpression.setText(data);
 
-        // Вычисление результата
-        String finalResult = evaluateExpression(data);
-        if (!finalResult.equals("Error")) {
-            tvResult.setText(finalResult);
+
+        if (!data.equals("") && isValidExpression(data)) {
+            String finalResult = evaluateExpression(data);
+            if (!finalResult.equals("Error")) {
+                tvResult.setText(finalResult);
+            }
         }
+    }
+
+    // Проверка на оператор
+    private boolean isOperator(String input) {
+        return input.equals("+") || input.equals("-") || input.equals("*") || input.equals("/");
+    }
+
+    // Проверка корректности выражения (парность скобок, отсутствие ошибок)
+    private boolean isValidExpression(String expression) {
+        int openBrackets = 0;
+
+        for (int i = 0; i < expression.length(); i++) {
+            char currentChar = expression.charAt(i);
+
+            // Проверка на парность скобок
+            if (currentChar == '(') {
+                openBrackets++;
+            } else if (currentChar == ')') {
+                openBrackets--;
+                if (openBrackets < 0) {
+                    return false;
+                }
+            }
+
+            // Проверка, чтобы не было двух операторов подряд
+            if (i > 0 && isOperator(expression.charAt(i) + "") && isOperator(expression.charAt(i - 1) + "")) {
+                return false;
+            }
+        }
+
+        return openBrackets == 0;
     }
 
     private String evaluateExpression(String expression) {
